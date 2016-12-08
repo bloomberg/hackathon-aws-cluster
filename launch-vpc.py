@@ -44,8 +44,6 @@ st = cf.describe_stacks(StackName = 'jepsen')
 
 outputs = st['Stacks'][0]['Outputs']
 
-print(outputs)
-
 for out in outputs:
     if out['Description'] == 'PrivateRouteTable':
         privateRouteTable = out['OutputValue']
