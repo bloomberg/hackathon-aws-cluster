@@ -1,0 +1,78 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Jepsen VPC Student",
+  "Parameters": {
+    "Bucket": {
+      "Type": "String"
+    },
+    "ImageId": {
+      "Type": "String"
+    },
+    "KeyName": {
+      "Type": "String"
+    },
+    "ControlInstanceType": {
+      "Type": "String"
+    },
+    "WorkerInstanceType": {
+      "Type": "String"
+    },
+    "ControlDiskSize": {
+      "Type": "Number"
+    },
+    "WorkerDiskSize": {
+      "Type": "Number"
+    },
+    "VpcId": {
+      "Type": "String"
+    },
+    "SecGroupAccess": {
+      "Type": "String"
+    },
+    "SubnetNumber": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": { "Fn::Join" : [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".0/24" ] ] },
+        "VpcId": { "Ref": "VpcId" }
+      }
+    },
+    "secgroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Student Cluster",
+        "VpcId": { "Ref": "VpcId" }
+      }
+    },
+    "ingress1": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": { "Ref": "secgroup" },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": { "Ref": "secgroup" }
+      }
+    },
+    "ingress2": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": { "Ref": "secgroup" },
+        "IpProtocol": "tcp",
+        "FromPort": "22",
+        "ToPort": "22",
+        "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
+      }
+    },
+    "egress1": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": { "Ref": "secgroup" },
+        "IpProtocol": "-1",
+        "CidrIp": "0.0.0.0/0"
+      }
+    }
+  }
+}

@@ -1,0 +1,330 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Jepsen VPC",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": { "default": "Admin Access" },
+          "Parameters": [
+            "KeyName"
+          ]
+        },
+        {
+          "Label": { "default": "Student Access" },
+          "Parameters": [
+            "ElasticIp",
+            "AccessInboundCidrIp"
+          ]
+        },
+        {
+          "Label": { "default": "Student Control Instances" },
+          "Parameters": [
+            "ControlInstanceType",
+            "ControlDiskSize"
+          ]
+        },
+        {
+          "Label": { "default": "Student Worker Instances" },
+          "Parameters": [
+            "WorkerInstanceType",
+            "WorkerDiskSize"
+          ]
+        },
+        {
+          "Label": { "default": "S3 Bucket for templates" },
+          "Parameters": [
+            "Bucket"
+          ]
+        },
+        {
+          "Label": { "default": "Launch Conditions" },
+          "Parameters": [
+            "LaunchStudents"
+          ]
+        },
+      ],
+      "ParameterLabels": {
+        "KeyName": { "default": "SSH keypair name" },
+        "ElasticIp": { "default": "AllocationID of Elastic IP used for access node" },
+        "AccessInboundCidrIp": { "default": "Access CIDR range or IP" },
+        "ControlInstanceType": { "default": "Control node instance type" },
+        "WorkerInstanceType": { "default": "Worker node instance type" },
+        "ControlDiskSize": { "default": "Control node disk size" },
+        "WorkerDiskSize": { "default": "Worker node disk size" },
+        "Bucket": { "default" : "Bucket holding templates" },
+        "LaunchStudents": { "default" : "Should student clusters be launched?" }
+      }
+    }
+  },
+  "Parameters": {
+    "KeyName": {
+      "Description": "EC2 KeyPair for admin access to the access node.",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "ElasticIp": {
+      "Description": "AllocationId of Elastic IP to use for access node.",
+      "Type": "String",
+      "Default": ""
+    },
+    "AccessInboundCidrIp": {
+      "Description": "IP address or CIDR range which should have access to the access node (e.g. your IP, 1.2.3.4/32, ...).",
+      "Type": "String",
+      "Default": ""
+    },
+    "ControlInstanceType": {
+      "Description": "EC2 instance type used for the Jepsen control node. Jepsen tests can be CPU, memory, and network intensive. Recommended 16 GB of RAM.",
+      "Type": "String",
+      "Default": "m3.xlarge"
+    },
+    "WorkerInstanceType": {
+      "Description": "EC2 instance type used for the Jepsen Worker nodes, which will run the distributed system being tested.",
+      "Type": "String",
+      "Default": "m3.large"
+    },
+    "ControlDiskSize": {
+      "Description": "Disk size for the control node, in GB.",
+      "Type": "Number",
+      "MinValue": 4,
+      "Default": 16
+    },
+    "WorkerDiskSize": {
+      "Description": "Disk size for Worker nodes, in GB.",
+      "Type": "Number",
+      "MinValue": 4,
+      "Default": 16
+    },
+    "Bucket": {
+      "Description": "Name of S3 bucket holding templates, used for nested templates.",
+      "Type": "String",
+      "Default": ""
+    },
+    "LaunchStudents": {
+      "Description": "Should student clusters be launched?",
+      "Type": "String",
+      "Default": "yes",
+      "AllowedValues": [ "yes", "no" ],
+      "ConstraintDescription": "Must be 'yes' or 'no'."
+    }
+  },
+  "Conditions": {
+    "CreateStudents": { "Fn::Equals" : [ "yes", { "Ref": "LaunchStudents" } ] }
+  },
+  "Mappings": {
+    "RegionMap": {
+      "us-east-1": {
+        "64": "ami-93f7cf84"
+      },
+      "eu-west-1": {
+        "64": "ami-88aef7fb"
+      }
+    }
+  },
+  "Outputs": {
+    "VpcId": {
+      "Description": "VpcId",
+      "Value": { "Ref": "Vpc" }
+    },
+    "SecGroupAccess": {
+      "Description": "SecGroupAccess",
+      "Value": { "Ref": "SecGroup" }
+    }
+  },
+  "Resources": {
+    "Vpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "192.168.0.0/16",
+        "InstanceTenancy": "default",
+        "EnableDnsSupport": "false",
+        "EnableDnsHostnames": "false"
+      }
+    },
+    "PublicNet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "192.168.254.0/24",
+        "VpcId": { "Ref": "Vpc" }
+      }
+    },
+    "Igw": {
+      "Type": "AWS::EC2::InternetGateway"
+    },
+    "IgwAttach": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": { "Ref": "Vpc" },
+        "InternetGatewayId": { "Ref": "Igw" }
+      }
+    },
+    "PrivateRoute": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "Vpc" }
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": { "Ref": "Vpc" }
+      }
+    },
+    "IgwRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": { "Ref": "PublicRoute" },
+        "GatewayId": { "Ref": "Igw" }
+      },
+      "DependsOn": "IgwAttach"
+    },
+    "PublicIgwRoute": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "PublicRoute" },
+        "SubnetId": { "Ref": "PublicNet" }
+      }
+    },
+    "EipNatgw": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": { "Domain": "vpc" },
+      "DependsOn": "IgwAttach"
+    },
+    "Natgw": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": { "Fn::GetAtt": [ "EipNatgw", "AllocationId" ] },
+        "SubnetId": { "Ref": "PublicNet" }
+      },
+      "DependsOn": "PublicIgwRoute"
+    },
+    "NatgwRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": { "Ref": "PrivateRoute" },
+        "NatGatewayId": { "Ref": "Natgw" }
+      },
+      "DependsOn": "Natgw"
+    },
+    "DhcpOpts": {
+      "Type": "AWS::EC2::DHCPOptions",
+      "Properties": {
+        "DomainName": "eu-west-1.compute.internal",
+        "DomainNameServers": [ "AmazonProvidedDNS" ]
+      }
+    },
+    "DhcpOptsAssoc": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties": {
+        "VpcId": { "Ref": "Vpc" },
+        "DhcpOptionsId": { "Ref": "DhcpOpts" }
+      }
+    },
+    "NetAcl": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": { "Ref": "Vpc" }
+      }
+    },
+    "acl1": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": "true",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": { "Ref": "NetAcl" }
+      }
+    },
+    "acl2": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": { "Ref": "NetAcl" }
+      }
+    },
+    "PublicNetAclAssoc": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": { "Ref": "NetAcl" },
+        "SubnetId": { "Ref": "PublicNet" }
+      }
+    },
+    "SecGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Access Node",
+        "VpcId": { "Ref": "Vpc" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": { "Ref": "AccessInboundCidrIp" }
+          }
+        ]
+      }
+    },
+    "access": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-9398d3e0",
+        "InstanceType": "t2.micro",
+        "KeyName": { "Ref": "KeyName" },
+        "SubnetId": { "Ref": "PublicNet" },
+        "SecurityGroupIds": [ { "Ref": "SecGroup" } ]
+      },
+      "DependsOn": "IgwAttach"
+    },
+    "EipAssoc": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": { "Ref": "ElasticIp" },
+        "InstanceId": { "Ref": "access" }
+      }
+    },
+    "student01": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Condition": "CreateStudents",
+      "Properties": {
+        "TemplateURL": { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref": "Bucket" }, "/jepsen-vpc-student.json" ] ] },
+        "Parameters": {
+          "VpcId": { "Ref": "Vpc" },
+          "Bucket": { "Ref": "Bucket" },
+          "ImageId": { "Fn::FindInMap" : [ "RegionMap", { "Ref": "AWS::Region" }, "64" ] },
+          "KeyName": { "Ref": "KeyName" },
+          "ControlInstanceType": { "Ref": "ControlInstanceType" },
+          "WorkerInstanceType": { "Ref": "WorkerInstanceType" },
+          "ControlDiskSize": { "Ref": "ControlDiskSize" },
+          "WorkerDiskSize": { "Ref": "WorkerDiskSize" },
+          "SecGroupAccess": { "Ref" : "SecGroup" },
+          "SubnetNumber": "01"
+        }
+      }
+    },
+    "student02": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Condition": "CreateStudents",
+      "Properties": {
+        "TemplateURL": { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref": "Bucket" }, "/jepsen-vpc-student.json" ] ] },
+        "Parameters": {
+          "VpcId": { "Ref": "Vpc" },
+          "Bucket": { "Ref": "Bucket" },
+          "ImageId": { "Fn::FindInMap" : [ "RegionMap", { "Ref": "AWS::Region" }, "64" ] },
+          "KeyName": { "Ref": "KeyName" },
+          "ControlInstanceType": { "Ref": "ControlInstanceType" },
+          "WorkerInstanceType": { "Ref": "WorkerInstanceType" },
+          "ControlDiskSize": { "Ref": "ControlDiskSize" },
+          "WorkerDiskSize": { "Ref": "WorkerDiskSize" },
+          "SecGroupAccess": { "Ref" : "SecGroup" },
+          "SubnetNumber": "02"
+        }
+      }
+    }
+  }
+}
