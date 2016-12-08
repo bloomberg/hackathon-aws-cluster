@@ -1,62 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Jepsen VPC",
-  "Metadata": {
-    "AWS::CloudFormation::Interface": {
-      "ParameterGroups": [
-        {
-          "Label": { "default": "Admin Access" },
-          "Parameters": [
-            "KeyName"
-          ]
-        },
-        {
-          "Label": { "default": "Student Access" },
-          "Parameters": [
-            "ElasticIp",
-            "AccessInboundCidrIp"
-          ]
-        },
-        {
-          "Label": { "default": "Student Control Instances" },
-          "Parameters": [
-            "ControlInstanceType",
-            "ControlDiskSize"
-          ]
-        },
-        {
-          "Label": { "default": "Student Worker Instances" },
-          "Parameters": [
-            "WorkerInstanceType",
-            "WorkerDiskSize"
-          ]
-        },
-        {
-          "Label": { "default": "S3 Bucket for templates" },
-          "Parameters": [
-            "Bucket"
-          ]
-        },
-        {
-          "Label": { "default": "Launch Conditions" },
-          "Parameters": [
-            "LaunchStudents"
-          ]
-        },
-      ],
-      "ParameterLabels": {
-        "KeyName": { "default": "SSH keypair name" },
-        "ElasticIp": { "default": "AllocationID of Elastic IP used for access node" },
-        "AccessInboundCidrIp": { "default": "Access CIDR range or IP" },
-        "ControlInstanceType": { "default": "Control node instance type" },
-        "WorkerInstanceType": { "default": "Worker node instance type" },
-        "ControlDiskSize": { "default": "Control node disk size" },
-        "WorkerDiskSize": { "default": "Worker node disk size" },
-        "Bucket": { "default" : "Bucket holding templates" },
-        "LaunchStudents": { "default" : "Should student clusters be launched?" }
-      }
-    }
-  },
   "Parameters": {
     "KeyName": {
       "Description": "EC2 KeyPair for admin access to the access node.",
@@ -64,60 +8,15 @@
     },
     "ElasticIp": {
       "Description": "AllocationId of Elastic IP to use for access node.",
-      "Type": "String",
-      "Default": ""
+      "Type": "String"
     },
     "AccessInboundCidrIp": {
       "Description": "IP address or CIDR range which should have access to the access node (e.g. your IP, 1.2.3.4/32, ...).",
-      "Type": "String",
-      "Default": ""
+      "Type": "String"
     },
-    "ControlInstanceType": {
-      "Description": "EC2 instance type used for the Jepsen control node. Jepsen tests can be CPU, memory, and network intensive. Recommended 16 GB of RAM.",
-      "Type": "String",
-      "Default": "m3.xlarge"
-    },
-    "WorkerInstanceType": {
-      "Description": "EC2 instance type used for the Jepsen Worker nodes, which will run the distributed system being tested.",
-      "Type": "String",
-      "Default": "m3.large"
-    },
-    "ControlDiskSize": {
-      "Description": "Disk size for the control node, in GB.",
-      "Type": "Number",
-      "MinValue": 4,
-      "Default": 16
-    },
-    "WorkerDiskSize": {
-      "Description": "Disk size for Worker nodes, in GB.",
-      "Type": "Number",
-      "MinValue": 4,
-      "Default": 16
-    },
-    "Bucket": {
-      "Description": "Name of S3 bucket holding templates, used for nested templates.",
-      "Type": "String",
-      "Default": ""
-    },
-    "LaunchStudents": {
-      "Description": "Should student clusters be launched?",
-      "Type": "String",
-      "Default": "yes",
-      "AllowedValues": [ "yes", "no" ],
-      "ConstraintDescription": "Must be 'yes' or 'no'."
-    }
-  },
-  "Conditions": {
-    "CreateStudents": { "Fn::Equals" : [ "yes", { "Ref": "LaunchStudents" } ] }
-  },
-  "Mappings": {
-    "RegionMap": {
-      "us-east-1": {
-        "64": "ami-93f7cf84"
-      },
-      "eu-west-1": {
-        "64": "ami-88aef7fb"
-      }
+    "AccessNodeImageId": {
+      "Description": "ID of AMI to be used for access node",
+      "Type": "String"
     }
   },
   "Outputs": {
@@ -128,6 +27,10 @@
     "SecGroupAccess": {
       "Description": "SecGroupAccess",
       "Value": { "Ref": "SecGroup" }
+    },
+    "PrivateRouteTable": {
+      "Description": "PrivateRouteTable",
+      "Value": { "Ref": "PrivateRoute" }
     }
   },
   "Resources": {
@@ -266,6 +169,11 @@
             "FromPort": "22",
             "ToPort": "22",
             "CidrIp": { "Ref": "AccessInboundCidrIp" }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "CidrIp": { "Ref": "AccessInboundCidrIp" }
           }
         ]
       }
@@ -273,7 +181,7 @@
     "access": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "ImageId": "ami-9398d3e0",
+        "ImageId": { "Ref": "AccessNodeImageId" },
         "InstanceType": "t2.micro",
         "KeyName": { "Ref": "KeyName" },
         "SubnetId": { "Ref": "PublicNet" },
@@ -286,44 +194,6 @@
       "Properties": {
         "AllocationId": { "Ref": "ElasticIp" },
         "InstanceId": { "Ref": "access" }
-      }
-    },
-    "student01": {
-      "Type": "AWS::CloudFormation::Stack",
-      "Condition": "CreateStudents",
-      "Properties": {
-        "TemplateURL": { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref": "Bucket" }, "/jepsen-vpc-student.json" ] ] },
-        "Parameters": {
-          "VpcId": { "Ref": "Vpc" },
-          "Bucket": { "Ref": "Bucket" },
-          "ImageId": { "Fn::FindInMap" : [ "RegionMap", { "Ref": "AWS::Region" }, "64" ] },
-          "KeyName": { "Ref": "KeyName" },
-          "ControlInstanceType": { "Ref": "ControlInstanceType" },
-          "WorkerInstanceType": { "Ref": "WorkerInstanceType" },
-          "ControlDiskSize": { "Ref": "ControlDiskSize" },
-          "WorkerDiskSize": { "Ref": "WorkerDiskSize" },
-          "SecGroupAccess": { "Ref" : "SecGroup" },
-          "SubnetNumber": "01"
-        }
-      }
-    },
-    "student02": {
-      "Type": "AWS::CloudFormation::Stack",
-      "Condition": "CreateStudents",
-      "Properties": {
-        "TemplateURL": { "Fn::Join" : [ "", [ "https://s3.amazonaws.com/", { "Ref": "Bucket" }, "/jepsen-vpc-student.json" ] ] },
-        "Parameters": {
-          "VpcId": { "Ref": "Vpc" },
-          "Bucket": { "Ref": "Bucket" },
-          "ImageId": { "Fn::FindInMap" : [ "RegionMap", { "Ref": "AWS::Region" }, "64" ] },
-          "KeyName": { "Ref": "KeyName" },
-          "ControlInstanceType": { "Ref": "ControlInstanceType" },
-          "WorkerInstanceType": { "Ref": "WorkerInstanceType" },
-          "ControlDiskSize": { "Ref": "ControlDiskSize" },
-          "WorkerDiskSize": { "Ref": "WorkerDiskSize" },
-          "SecGroupAccess": { "Ref" : "SecGroup" },
-          "SubnetNumber": "02"
-        }
       }
     }
   }

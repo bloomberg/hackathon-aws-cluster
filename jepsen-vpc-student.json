@@ -2,9 +2,6 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Jepsen VPC Student",
   "Parameters": {
-    "Bucket": {
-      "Type": "String"
-    },
     "ImageId": {
       "Type": "String"
     },
@@ -29,6 +26,9 @@
     "SecGroupAccess": {
       "Type": "String"
     },
+    "RouteTable": {
+      "Type": "String"
+    },
     "SubnetNumber": {
       "Type": "String"
     }
@@ -37,8 +37,15 @@
     "subnet": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
-        "CidrBlock": { "Fn::Join" : [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".0/24" ] ] },
+        "CidrBlock": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".0/24" ] ] },
         "VpcId": { "Ref": "VpcId" }
+      }
+    },
+    "route": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "RouteTable" },
+        "SubnetId": { "Ref": "subnet" }
       }
     },
     "secgroup": {
@@ -72,6 +79,55 @@
         "GroupId": { "Ref": "secgroup" },
         "IpProtocol": "-1",
         "CidrIp": "0.0.0.0/0"
+      }
+    }
+    "controlWaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Properties": { }
+    },
+    "controlWaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "Properties": {
+        "Handle": { "Ref": "controlWaitHandle" },
+	"Count": "1"
+      }
+    },
+    "control": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": { "Ref": "ImageId" },
+        "InstanceType": { "Ref": "ControlInstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".100" ] ] },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": { "VolumeSize": { "Ref": "ControlDiskSize" } }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "resize2fs /dev/xvda2\n",
+                "sudo -u admin echo 192.168.", { "Ref": "SubnetNumber" }, ".101 >> /home/admin/nodes\n",
+                "sudo -u admin echo 192.168.", { "Ref": "SubnetNumber" }, ".102 >> /home/admin/nodes\n",
+                "sudo -u admin echo 192.168.", { "Ref": "SubnetNumber" }, ".103 >> /home/admin/nodes\n",
+                "sudo -u admin echo 192.168.", { "Ref": "SubnetNumber" }, ".104 >> /home/admin/nodes\n",
+                "sudo -u admin echo 192.168.", { "Ref": "SubnetNumber" }, ".105 >> /home/admin/nodes\n",
+                "chmod 444 /home/admin/nodes\n",
+                "chown admin:admin /home/admin/nodes\n",
+                "sudo -u admin rm -f /home/admin/.ssh/id_rsa*\n",
+                "sudo -u admin ssh-keygen -b 2048 -t rsa -f /home/admin/.ssh/id_rsa -q -N ''\n",
+                "chown admin:admin /home/admin/.ssh/*\n",
+		"cfn-signal ", { "Ref": "controlWaitHandle" }, " -d `cat /home/admin/.ssh/id_rsa.pub` \n"
+              ]
+            ]
+          }
+        }
       }
     }
   }
