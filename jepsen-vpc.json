@@ -51,7 +51,10 @@
   },
   "Resources": {
     "Bucket": {
-      "Type": "AWS::S3::Bucket"
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "AccessControl": "PublicRead"
+      }
     },
     "IamProfile": {
       "Type": "AWS::IAM::InstanceProfile",
@@ -231,6 +234,7 @@
               [
                 "#!/bin/bash -xe\n",
 		"apt-get -y update\n",
+		"apt-get -y upgrade\n",
                 "apt-get -y install apache2\n",
                 "a2enmod proxy\n",
                 "a2enmod proxy_http\n",
