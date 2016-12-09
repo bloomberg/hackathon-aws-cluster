@@ -30,6 +30,8 @@ for out in outputs:
         keyName = out['OutputValue']
     elif out['Description'] == 'Bucket':
         bucket = out['OutputValue']
+    elif out['Description'] == 'IamProfile':
+        iamProfile = out['OutputValue']
 
 with open('jepsen-vpc-student.json', 'r') as template_file:
     studentTemplate = template_file.read()
@@ -43,6 +45,7 @@ st = cf.create_stack(StackName = stackName,
                      Parameters = [
                        { "ParameterKey": "KeyName", "ParameterValue": keyName },
                        { "ParameterKey": "Bucket", "ParameterValue": bucket },
+                       { "ParameterKey": "IamProfile", "ParameterValue": iamProfile },
                        { "ParameterKey": "ControlInstanceType", "ParameterValue": controlNodeInstanceType },
                        { "ParameterKey": "ControlDiskSize", "ParameterValue": controlNodeDiskSize },
                        { "ParameterKey": "WorkerInstanceType", "ParameterValue": workerNodeInstanceType },

@@ -11,6 +11,9 @@
     "Bucket": {
       "Type": "String"
     },
+    "IamProfile": {
+      "Type": "String"
+    },
     "ControlInstanceType": {
       "Type": "String"
     },
@@ -64,6 +67,18 @@
 	    "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
           },
           {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+	    "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+	    "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
+          },
+          {
             "IpProtocol": "icmp",
             "FromPort": "-1",
             "ToPort": "-1",
@@ -99,6 +114,7 @@
         "InstanceType": { "Ref": "ControlInstanceType" },
         "KeyName": { "Ref": "KeyName" },
         "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "IamInstanceProfile": { "Ref": "IamProfile" },
         "SubnetId": { "Ref": "subnet" },
         "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".100" ] ] },
         "BlockDeviceMappings": [
@@ -113,16 +129,16 @@
               "",
               [
                 "#!/bin/bash -xe\n",
-                "echo 192.168.", { "Ref": "SubnetNumber" }, ".101 db1 >> /etc/hosts\n",
-                "echo 192.168.", { "Ref": "SubnetNumber" }, ".102 db2 >> /etc/hosts\n",
-                "echo 192.168.", { "Ref": "SubnetNumber" }, ".103 db3 >> /etc/hosts\n",
-                "echo 192.168.", { "Ref": "SubnetNumber" }, ".104 db4 >> /etc/hosts\n",
-                "echo 192.168.", { "Ref": "SubnetNumber" }, ".105 db5 >> /etc/hosts\n",
-                "echo db1 > /home/admin/nodes\n",
-                "echo db2 >> /home/admin/nodes\n",
-                "echo db3 >> /home/admin/nodes\n",
-                "echo db4 >> /home/admin/nodes\n",
-                "echo db5 >> /home/admin/nodes\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".101 w1 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".102 w2 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".103 w3 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".104 w4 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".105 w5 >> /etc/hosts\n",
+                "echo w1 > /home/admin/nodes\n",
+                "echo w2 >> /home/admin/nodes\n",
+                "echo w3 >> /home/admin/nodes\n",
+                "echo w4 >> /home/admin/nodes\n",
+                "echo w5 >> /home/admin/nodes\n",
                 "chmod 444 /home/admin/nodes\n",
                 "chown admin:admin /home/admin/nodes\n",
                 "rm -f /home/admin/.ssh/id_rsa*\n",
@@ -140,7 +156,7 @@
         }
       }
     },
-    "db1": {
+    "w1": {
       "Type": "AWS::EC2::Instance",
       "DependsOn": "controlWaitCondition",
       "Properties": {
@@ -148,8 +164,141 @@
         "InstanceType": { "Ref": "WorkerInstanceType" },
         "KeyName": { "Ref": "KeyName" },
         "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "IamInstanceProfile": { "Ref": "IamProfile" },
         "SubnetId": { "Ref": "subnet" },
         "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".101" ] ] },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": { "VolumeSize": { "Ref": "WorkerDiskSize" } }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+		"apt-get -y update\n",
+                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
+                "chown admin:admin /home/admin/.ssh/*\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "w2": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "controlWaitCondition",
+      "Properties": {
+        "ImageId": { "Ref": "ImageId" },
+        "InstanceType": { "Ref": "WorkerInstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "IamInstanceProfile": { "Ref": "IamProfile" },
+        "SubnetId": { "Ref": "subnet" },
+        "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".102" ] ] },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": { "VolumeSize": { "Ref": "WorkerDiskSize" } }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+		"apt-get -y update\n",
+                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
+                "chown admin:admin /home/admin/.ssh/*\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "w3": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "controlWaitCondition",
+      "Properties": {
+        "ImageId": { "Ref": "ImageId" },
+        "InstanceType": { "Ref": "WorkerInstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "IamInstanceProfile": { "Ref": "IamProfile" },
+        "SubnetId": { "Ref": "subnet" },
+        "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".103" ] ] },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": { "VolumeSize": { "Ref": "WorkerDiskSize" } }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+		"apt-get -y update\n",
+                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
+                "chown admin:admin /home/admin/.ssh/*\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "w4": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "controlWaitCondition",
+      "Properties": {
+        "ImageId": { "Ref": "ImageId" },
+        "InstanceType": { "Ref": "WorkerInstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "IamInstanceProfile": { "Ref": "IamProfile" },
+        "SubnetId": { "Ref": "subnet" },
+        "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".104" ] ] },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": { "VolumeSize": { "Ref": "WorkerDiskSize" } }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+		"apt-get -y update\n",
+                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
+                "chown admin:admin /home/admin/.ssh/*\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "w5": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "controlWaitCondition",
+      "Properties": {
+        "ImageId": { "Ref": "ImageId" },
+        "InstanceType": { "Ref": "WorkerInstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "IamInstanceProfile": { "Ref": "IamProfile" },
+        "SubnetId": { "Ref": "subnet" },
+        "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".105" ] ] },
         "BlockDeviceMappings": [
           {
             "DeviceName": "/dev/xvda",

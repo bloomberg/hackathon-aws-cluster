@@ -17,6 +17,10 @@
     "AccessNodeImageId": {
       "Description": "ID of AMI to be used for access node",
       "Type": "String"
+    },
+    "AccessNodeInstanceType": {
+      "Description": "Instance type to be used for access node",
+      "Type": "String"
     }
   },
   "Outputs": {
@@ -32,6 +36,10 @@
       "Description": "Bucket",
       "Value": { "Ref": "Bucket" }
     },
+    "IamProfile": {
+      "Description": "IamProfile",
+      "Value": { "Ref": "IamProfile" }
+    },
     "SecGroupAccess": {
       "Description": "SecGroupAccess",
       "Value": { "Ref": "SecGroup" }
@@ -44,8 +52,50 @@
   "Resources": {
     "Bucket": {
       "Type": "AWS::S3::Bucket",
+    },
+    "IamProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
-        "AccessControl": "PublicReadWrite",
+        "Path": "/",
+        "Roles": [ { "Ref": "IamRole" } ]
+      }
+    },
+    "IamRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+    "IamPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "s3plz",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [ "s3:ListBucket" ],
+              "Resource": "arn:aws:s3:::*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [ "s3:GetObject", "s3:PutObject", "s3:DeleteObject" ],
+              "Resource": { "Fn::Join": [ "", [ "arn:aws:s3:::", { "Ref": "Bucket" }, "/*" ] ] }
+            }
+          ]
+        },
+        "Roles": [ { "Ref": "IamRole" } ]
       }
     },
     "Vpc": {
@@ -151,6 +201,12 @@
             "CidrIp": { "Ref": "AccessInboundCidrIp" }
           },
           {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": { "Ref": "AccessInboundCidrIp" }
+          },
+          {
             "IpProtocol": "icmp",
             "FromPort": "-1",
             "ToPort": "-1",
@@ -163,10 +219,22 @@
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "ImageId": { "Ref": "AccessNodeImageId" },
-        "InstanceType": "t2.micro",
+        "InstanceType": "{ "Ref": "AccessNodeInstanceType" },
         "KeyName": { "Ref": "KeyName" },
         "SubnetId": { "Ref": "PublicNet" },
-        "SecurityGroupIds": [ { "Ref": "SecGroup" } ]
+        "SecurityGroupIds": [ { "Ref": "SecGroup" } ],
+        "IamInstanceProfile": { "Ref": "IamProfile" }
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+		"apt-get -y update\n"
+              ]
+            ]
+          }
+        }
       },
       "DependsOn": "IgwAttach"
     },
