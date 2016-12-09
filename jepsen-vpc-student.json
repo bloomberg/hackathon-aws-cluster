@@ -145,7 +145,7 @@
                 "ssh-keygen -b 2048 -t rsa -f /home/admin/.ssh/id_rsa -q -N ''\n",
                 "chown admin:admin /home/admin/.ssh/*\n",
                 "cp /home/admin/.ssh/id_rsa.pub id_rsa.pub.", { "Ref": "SubnetNumber" }, "\n",
-                "aws s3 cp id_rsa.pub.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
+                "aws s3 cp id_rsa.pub.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, " --acl public-read\n",
 		"echo 'deb http://cloudfront.debian.net/debian stretch main' > /etc/apt/sources.list.d/stretch.list\n",
 		"echo 'APT::Default-Release \"jessie\";' > /etc/apt/apt.conf.d/default-release\n",
 		"apt-get -y update\n",
@@ -158,7 +158,7 @@
 		"openssl rand 1000 | strings | grep -io [[:alnum:]] | head -n 16 | tr -d '\n' > /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
 		"usermod -p $(openssl passwd -1 `cat /root/passwd.", { "Ref": "SubnetNumber" }, `) admin\n",
 		"echo >> /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
-                "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
+                "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, " --acl public-read\n",
 		"service shellinabox restart\n",
 		"cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
               ]
