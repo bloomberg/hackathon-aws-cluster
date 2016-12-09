@@ -230,7 +230,14 @@
               "",
               [
                 "#!/bin/bash -xe\n",
-		"apt-get -y update\n"
+		"apt-get -y update\n",
+                "apt-get -y install apache2\n",
+                "a2enmod proxy\n",
+                "a2enmod proxy_http\n",
+		"wget -O /var/www/html/index.html https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/master/index.html\n",
+		"wget -O /etc/apache2/sites-available/proxies.conf https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/master/proxies.conf\n",
+		"a2ensite proxies\n",
+		"service apache2 restart\n"
               ]
             ]
           }
