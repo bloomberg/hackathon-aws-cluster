@@ -146,11 +146,21 @@
                 "chown admin:admin /home/admin/.ssh/*\n",
                 "cp /home/admin/.ssh/id_rsa.pub id_rsa.pub.", { "Ref": "SubnetNumber" }, "\n",
                 "aws s3 cp id_rsa.pub.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
+		"echo 'deb http://cloudfront.debian.net/debian stretch main' > /etc/apt/sources.list.d/stretch.list\n",
+		"echo 'APT::Default-Release \"jessie\";' > /etc/apt/apt.conf.d/default-release\n",
 		"apt-get -y update\n",
 		"apt-get -y upgrade\n",
 		"apt-get -y install python-setuptools\n",
 		"easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
-		"cfn-signal \"", { "Ref": "controlWaitHandle" }, "\" \n"
+		"apt-get -y install shellinabox/stretch emacs-nox\n",
+		"sed -i -e 's/4200/80/' /etc/default/shellinabox\n",
+		"sed -i -e 's/--no-beep/--no-beep --disable-ssl --disable-ssl-menu/' /etc/default/shellinabox\n",
+		"openssl rand 1000 | strings | grep -io [[:alnum:]] | head -n 16 | tr -d '\n' > /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
+		"usermod -p $(openssl passwd -1 `cat /root/passwd.", { "Ref": "SubnetNumber" }, `) admin\n",
+		"echo >> /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
+                "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
+		"service shellinabox restart\n",
+		"cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
               ]
             ]
           }
