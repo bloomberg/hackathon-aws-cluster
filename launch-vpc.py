@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-import json
 import boto3
 
 region = 'eu-west-1'
@@ -39,26 +38,3 @@ print('Waiting for stack creation to be complete...')
 stwaiter.wait(StackName = 'jepsen')
 
 print('Stack creation complete')
-
-st = cf.describe_stacks(StackName = 'jepsen')
-
-outputs = st['Stacks'][0]['Outputs']
-
-for out in outputs:
-    if out['Description'] == 'PrivateRouteTable':
-        privateRouteTable = out['OutputValue']
-    elif out['Description'] == 'VpcId':
-        vpcId = out['OutputValue']
-    elif out['Description'] == 'SecGroupAccess':
-        secGroupAccess = out['OutputValue']
-
-with open('jepsen-vpc.tmp', 'w') as output_file:
-    output_file.write(json.dumps({"privateRouteTable": privateRouteTable,
-                                  "vpcId": vpcId,
-                                  "secGroupAccess": secGroupAccess,
-                                  "keyName": keyName,
-                                  "region": region
-                                 }))
-    output_file.write('\n')
-
-print('Parameters saved in jepsen-vpc.tmp, student clusters can be launched with launch-vpc-student.py')

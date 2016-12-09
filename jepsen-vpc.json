@@ -20,9 +20,17 @@
     }
   },
   "Outputs": {
+    "KeyName": {
+      "Description": "KeyName",
+      "Value": { "Ref": "KeyName" }
+    },
     "VpcId": {
       "Description": "VpcId",
       "Value": { "Ref": "Vpc" }
+    },
+    "Bucket": {
+      "Description": "Bucket",
+      "Value": { "Ref": "Bucket" }
     },
     "SecGroupAccess": {
       "Description": "SecGroupAccess",
@@ -34,6 +42,12 @@
     }
   },
   "Resources": {
+    "Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "AccessControl": "PublicReadWrite",
+      }
+    },
     "Vpc": {
       "Type": "AWS::EC2::VPC",
       "Properties": {

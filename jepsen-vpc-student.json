@@ -8,6 +8,9 @@
     "KeyName": {
       "Type": "String"
     },
+    "Bucket": {
+      "Type": "String"
+    },
     "ControlInstanceType": {
       "Type": "String"
     },
@@ -139,10 +142,44 @@
                 "rm -f /home/admin/.ssh/id_rsa*\n",
                 "ssh-keygen -b 2048 -t rsa -f /home/admin/.ssh/id_rsa -q -N ''\n",
                 "chown admin:admin /home/admin/.ssh/*\n",
+                "cp /home/admin/.ssh/id_rsa.pub id_rsa.pub.", { "Ref": "SubnetNumber" }, "\n",
+                "aws s3 cp id_rsa.pub.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
 		"apt-get -y update\n",
 		"apt-get -y install python-setuptools\n",
 		"easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
-		"cfn-signal ", { "Ref": "controlWaitHandle" }, " -d `cat /home/admin/.ssh/id_rsa.pub` \n"
+		"cfn-signal \"", { "Ref": "controlWaitHandle" }, "\" \n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "db1": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "controlWaitCondition",
+      "Properties": {
+        "ImageId": { "Ref": "ImageId" },
+        "InstanceType": { "Ref": "WorkerInstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "SubnetId": { "Ref": "subnet" },
+        "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".101" ] ] },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": { "VolumeSize": { "Ref": "WorkerDiskSize" } }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+		"apt-get -y update\n",
+                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
+                "chown admin:admin /home/admin/.ssh/*\n"
               ]
             ]
           }
