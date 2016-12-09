@@ -28,7 +28,7 @@ st = cf.create_stack(StackName = 'jepsen',
                        { "ParameterKey": "KeyName", "ParameterValue": keyName },
                        { "ParameterKey": "ElasticIp", "ParameterValue": allocationID },
                        { "ParameterKey": "AccessInboundCidrIp", "ParameterValue": accessNodeAllowedIPs },
-                       { "ParameterKey": "AccessNodeImageId", "ParameterValue": accessNodeImageId }
+                       { "ParameterKey": "AccessNodeImageId", "ParameterValue": accessNodeImageId },
                        { "ParameterKey": "AccessNodeInstanceType", "ParameterValue": accessNodeInstanceType }
                      ]
                      )
