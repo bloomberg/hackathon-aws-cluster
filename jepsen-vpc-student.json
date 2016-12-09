@@ -191,6 +191,7 @@
               [
                 "#!/bin/bash -xe\n",
 		"apt-get -y update\n",
+		"apt-get -y upgrade\n",
                 "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
 		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
                 "chown admin:admin /home/admin/.ssh/*\n"
