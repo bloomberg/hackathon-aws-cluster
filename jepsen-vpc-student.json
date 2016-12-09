@@ -55,43 +55,29 @@
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Student Cluster",
-        "VpcId": { "Ref": "VpcId" }
+        "VpcId": { "Ref": "VpcId" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+	    "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+	    "CidrIp": "0.0.0.0/0"
+          }
+        ]
       }
     },
-    "ingress1": {
+    "ingress": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": { "Ref": "secgroup" },
         "IpProtocol": "-1",
         "SourceSecurityGroupId": { "Ref": "secgroup" }
-      }
-    },
-    "ingress2": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": { "Ref": "secgroup" },
-        "IpProtocol": "tcp",
-        "FromPort": "22",
-        "ToPort": "22",
-        "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
-      }
-    },
-    "ingress3": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": { "Ref": "secgroup" },
-        "IpProtocol": "icmp",
-        "FromPort": "-1",
-        "ToPort": "-1",
-        "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
-      }
-    },
-    "egress1": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "GroupId": { "Ref": "secgroup" },
-        "IpProtocol": "-1",
-        "CidrIp": "0.0.0.0/0"
       }
     },
     "controlWaitHandle": {
