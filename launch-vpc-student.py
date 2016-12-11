@@ -3,6 +3,7 @@
 from __future__ import print_function
 import sys
 import boto3
+import concurrent.futures
 
 region = 'eu-west-1'
 studentNodeImageId = 'ami-88aef7fb'
@@ -11,7 +12,47 @@ controlNodeDiskSize = '16'
 workerNodeInstanceType = 'm3.large'
 workerNodeDiskSize = '16'
 
-studentNumber = sys.argv[1]
+argc = len(sys.argv) - 1
+if argc == 1:
+    start = int(sys.argv[1])
+    end = start
+elif argc == 2:
+    start = int(sys.argv[1])
+    end = int(sys.argv[2])
+else:
+    print("One or two arguments must be supplied.")
+    sys.exit()
+
+def launch_student(studentNumber):
+    print('Creating VPC stack for student', studentNumber)
+
+    stackName = 'student-' + studentNumber
+
+    st = cf.create_stack(StackName = stackName,
+                         TemplateBody = studentTemplate,
+                         Parameters = [
+                             { "ParameterKey": "KeyName", "ParameterValue": keyName },
+                             { "ParameterKey": "Bucket", "ParameterValue": bucket },
+                             { "ParameterKey": "IamProfile", "ParameterValue": iamProfile },
+                             { "ParameterKey": "ControlInstanceType", "ParameterValue": controlNodeInstanceType },
+                             { "ParameterKey": "ControlDiskSize", "ParameterValue": controlNodeDiskSize },
+                             { "ParameterKey": "WorkerInstanceType", "ParameterValue": workerNodeInstanceType },
+                             { "ParameterKey": "WorkerDiskSize", "ParameterValue": workerNodeDiskSize },
+                             { "ParameterKey": "ImageId", "ParameterValue": studentNodeImageId },
+                             { "ParameterKey": "SubnetNumber", "ParameterValue": studentNumber },
+                             { "ParameterKey": "VpcId", "ParameterValue": vpcId },
+                             { "ParameterKey": "SecGroupAccess", "ParameterValue": secGroupAccess },
+                             { "ParameterKey": "RouteTable", "ParameterValue": privateRouteTable }
+                             ]
+                         )
+
+    stwaiter = cf.get_waiter('stack_create_complete')
+
+    return (stackName, stwaiter)
+
+def wait_on_stack(t):
+    t[1].wait()
+    print("Stack", t[0], "complete")
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
@@ -36,32 +77,9 @@ for out in outputs:
 with open('jepsen-vpc-student.json', 'r') as template_file:
     studentTemplate = template_file.read()
 
-print('Creating VPC stack for student', studentNumber)
-
-stackName = 'student-' + studentNumber
-
-st = cf.create_stack(StackName = stackName,
-                     TemplateBody = studentTemplate,
-                     Parameters = [
-                       { "ParameterKey": "KeyName", "ParameterValue": keyName },
-                       { "ParameterKey": "Bucket", "ParameterValue": bucket },
-                       { "ParameterKey": "IamProfile", "ParameterValue": iamProfile },
-                       { "ParameterKey": "ControlInstanceType", "ParameterValue": controlNodeInstanceType },
-                       { "ParameterKey": "ControlDiskSize", "ParameterValue": controlNodeDiskSize },
-                       { "ParameterKey": "WorkerInstanceType", "ParameterValue": workerNodeInstanceType },
-                       { "ParameterKey": "WorkerDiskSize", "ParameterValue": workerNodeDiskSize },
-                       { "ParameterKey": "ImageId", "ParameterValue": studentNodeImageId },
-                       { "ParameterKey": "SubnetNumber", "ParameterValue": studentNumber },
-                       { "ParameterKey": "VpcId", "ParameterValue": vpcId },
-                       { "ParameterKey": "SecGroupAccess", "ParameterValue": secGroupAccess },
-                       { "ParameterKey": "RouteTable", "ParameterValue": privateRouteTable }
-                     ]
-                     )
-
-stwaiter = cf.get_waiter('stack_create_complete')
-
-print('Waiting for stack creation to be complete...')
-
-stwaiter.wait(StackName = stackName)
+with concurrent.futures.ThreadPoolExecutor(max_workers = (end - start) + 1) as executor:
+    fs = { executor.submit(wait_on_stack, launch_student(str(x))) for x in range(start, end + 1) }
+    print('Waiting for stack creation to be complete...')
+    concurrent.futures.wait(fs)
 
 print('Stack creation complete')
