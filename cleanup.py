@@ -46,15 +46,16 @@ def delete_student(stackName):
     return (stackName, waiter)
 
 def wait_on_stack(t):
-    t[1].wait()
+    t[1].wait(StackName = t[0])
     print("Stack", t[0], "deleted")
 
 print("Deleting student stacks")
-with concurrent.futures.ThreadPoolExecutor(max_workers = 10) as executor:
+with concurrent.futures.ThreadPoolExecutor(max_workers = len(stacks['StackSummaries'])) as executor:
     fs = { executor.submit(wait_on_stack, delete_student(x['StackName'])) for x in stacks['StackSummaries'] if x['StackName'].startswith('student-') }
     print('Waiting for stack deletion to be complete...')
     concurrent.futures.wait(fs)
 
 print("Deleting top-level stack")
 cf.delete_stack(StackName = 'jepsen')
+waiter = cf.get_waiter('stack_delete_complete')
 waiter.wait(StackName = 'jepsen')

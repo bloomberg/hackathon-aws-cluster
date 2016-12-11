@@ -51,7 +51,7 @@ def launch_student(studentNumber):
     return (stackName, stwaiter)
 
 def wait_on_stack(t):
-    t[1].wait()
+    t[1].wait(StackName = t[0])
     print("Stack", t[0], "complete")
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
