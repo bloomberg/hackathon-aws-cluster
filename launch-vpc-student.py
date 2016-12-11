@@ -36,7 +36,7 @@ for out in outputs:
 with open('jepsen-vpc-student.json', 'r') as template_file:
     studentTemplate = template_file.read()
 
-print('Creating VPC stack')
+print('Creating VPC stack for student', studentNumber)
 
 stackName = 'student-' + studentNumber
 
