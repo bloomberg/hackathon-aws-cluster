@@ -25,7 +25,7 @@ waiter = s3.get_waiter('object_not_exists')
 print("Clearing contents of S3 bucket", bucket)
 if 'Contents' in list:
     for obj in list['Contents']:
-        print("Deleting ", obj['Key'])
+        print("Deleting", obj['Key'])
         s3.delete_object(Bucket = bucket, Key = obj['Key'])
         waiter.wait(Bucket = bucket, Key = obj['Key'])
 
