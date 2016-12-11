@@ -160,6 +160,7 @@
 		"echo >> /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
                 "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
 		"service shellinabox restart\n",
+		"echo 'rescan-nodes' >> /home/admin/.bash_profile\n",
 		"cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
               ]
             ]
