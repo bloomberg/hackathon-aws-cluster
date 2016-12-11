@@ -3,6 +3,7 @@
 from __future__ import print_function
 import sys
 import boto3
+import concurrent.futures
 
 region = 'eu-west-1'
 
@@ -37,14 +38,22 @@ stacks = cf.list_stacks(StackStatusFilter = [ 'CREATE_IN_PROGRESS',
                                               'ROLLBACK_COMPLETE'
                                             ])
 
-waiter = cf.get_waiter('stack_delete_complete')
+
+def delete_student(stackName):
+    print("Deleting", stackName)
+    cf.delete_stack(StackName = stackName)
+    waiter = cf.get_waiter('stack_delete_complete')
+    return (stackName, waiter)
+
+def wait_on_stack(t):
+    t[1].wait()
+    print("Stack", t[0], "deleted")
 
 print("Deleting student stacks")
-for stack in stacks['StackSummaries']:
-    if stack['StackName'].startswith('student-'):
-        print("Deleting", stack['StackName'])
-        cf.delete_stack(StackName = stack['StackName'])
-        waiter.wait(StackName = stack['StackName'])
+with concurrent.futures.ThreadPoolExecutor(max_workers = 10) as executor:
+    fs = { executor.submit(wait_on_stack, delete_student(x['StackName'])) for x in stacks['StackSummaries'] if x['StackName'].startswith('student-') }
+    print('Waiting for stack deletion to be complete...')
+    concurrent.futures.wait(fs)
 
 print("Deleting top-level stack")
 cf.delete_stack(StackName = 'jepsen')
