@@ -191,9 +191,17 @@
               "",
               [
                 "#!/bin/bash -xe\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".101 w1 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".102 w2 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".103 w3 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".104 w4 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".105 w5 >> /etc/hosts\n",
 		"apt-get -y update\n",
 		"apt-get -y upgrade\n",
-                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+                "until aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+                "do\n",
+                "  sleep 5\n",
+                "done\n",
 		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
                 "chown admin:admin /home/admin/.ssh/*\n"
               ]
@@ -225,6 +233,17 @@
               "",
               [
                 "#!/bin/bash -xe\n",
+		"apt-get -y update\n",
+		"apt-get -y upgrade\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".101 w1 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".102 w2 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".103 w3 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".104 w4 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".105 w5 >> /etc/hosts\n",
+                "until aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+                "do\n",
+                "  sleep 5\n",
+                "done\n",
 		"apt-get -y update\n",
 		"apt-get -y upgrade\n",
                 "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
@@ -259,9 +278,17 @@
               "",
               [
                 "#!/bin/bash -xe\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".101 w1 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".102 w2 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".103 w3 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".104 w4 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".105 w5 >> /etc/hosts\n",
+                "until aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+                "do\n",
+                "  sleep 5\n",
+                "done\n",
 		"apt-get -y update\n",
 		"apt-get -y upgrade\n",
-                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
 		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
                 "chown admin:admin /home/admin/.ssh/*\n"
               ]
@@ -293,9 +320,17 @@
               "",
               [
                 "#!/bin/bash -xe\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".101 w1 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".102 w2 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".103 w3 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".104 w4 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".105 w5 >> /etc/hosts\n",
+                "until aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+                "do\n",
+                "  sleep 5\n",
+                "done\n",
 		"apt-get -y update\n",
 		"apt-get -y upgrade\n",
-                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
 		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
                 "chown admin:admin /home/admin/.ssh/*\n"
               ]
@@ -327,9 +362,17 @@
               "",
               [
                 "#!/bin/bash -xe\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".101 w1 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".102 w2 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".103 w3 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".104 w4 >> /etc/hosts\n",
+                "echo 192.168.", { "Ref": "SubnetNumber" }, ".105 w5 >> /etc/hosts\n",
+                "until aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
+                "do\n",
+                "  sleep 5\n",
+                "done\n",
 		"apt-get -y update\n",
 		"apt-get -y upgrade\n",
-                "aws s3 cp s3://", { "Ref": "Bucket" }, "/id_rsa.pub.", { "Ref": "SubnetNumber" }, " controlkey \n",
 		"cat controlkey >> /home/admin/.ssh/authorized_keys\n",
                 "chown admin:admin /home/admin/.ssh/*\n"
               ]
