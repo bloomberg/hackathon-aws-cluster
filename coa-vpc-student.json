@@ -129,7 +129,7 @@
 		"usermod -p $(openssl passwd -1 `cat /root/passwd.", { "Ref": "SubnetNumber" }, "`) ec2-user\n",
 		"echo >> /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
                 "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
-		"cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
+		"/opt/aws/bin/cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
               ]
             ]
           }
