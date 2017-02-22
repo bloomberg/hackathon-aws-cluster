@@ -9,7 +9,7 @@ region = 'eu-west-1'
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
-st = cf.describe_stacks(StackName = 'jepsen')
+st = cf.describe_stacks(StackName = 'coa')
 
 outputs = st['Stacks'][0]['Outputs']
 

@@ -5,11 +5,11 @@ import sys
 import boto3
 import concurrent.futures
 
-region = 'eu-west-1'
+region = 'us-east-1'
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
-st = cf.describe_stacks(StackName = 'jepsen')
+st = cf.describe_stacks(StackName = 'coa')
 
 outputs = st['Stacks'][0]['Outputs']
 
@@ -56,6 +56,6 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = len(stacks['StackSummar
     concurrent.futures.wait(fs)
 
 print("Deleting top-level stack")
-cf.delete_stack(StackName = 'jepsen')
+cf.delete_stack(StackName = 'coa')
 waiter = cf.get_waiter('stack_delete_complete')
-waiter.wait(StackName = 'jepsen')
+waiter.wait(StackName = 'coa')

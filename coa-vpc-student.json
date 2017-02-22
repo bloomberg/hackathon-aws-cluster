@@ -1,0 +1,140 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "COA Hackathon VPC Student",
+  "Parameters": {
+    "ImageId": {
+      "Type": "String"
+    },
+    "KeyName": {
+      "Type": "String"
+    },
+    "Bucket": {
+      "Type": "String"
+    },
+    "IamProfile": {
+      "Type": "String"
+    },
+    "ControlInstanceType": {
+      "Type": "String"
+    },
+    "ControlDiskSize": {
+      "Type": "Number"
+    },
+    "VpcId": {
+      "Type": "String"
+    },
+    "SecGroupAccess": {
+      "Type": "String"
+    },
+    "RouteTable": {
+      "Type": "String"
+    },
+    "SubnetNumber": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".0/24" ] ] },
+        "VpcId": { "Ref": "VpcId" }
+      }
+    },
+    "route": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": { "Ref": "RouteTable" },
+        "SubnetId": { "Ref": "subnet" }
+      }
+    },
+    "secgroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Student Cluster",
+        "VpcId": { "Ref": "VpcId" },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+	    "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+	    "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+	    "SourceSecurityGroupId": { "Ref": "SecGroupAccess" }
+          },
+          {
+            "IpProtocol": "icmp",
+            "FromPort": "-1",
+            "ToPort": "-1",
+	    "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "ingress": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": { "Ref": "secgroup" },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": { "Ref": "secgroup" }
+      }
+    },
+    "controlWaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Properties": { }
+    },
+    "controlWaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "Properties": {
+        "Handle": { "Ref": "controlWaitHandle" },
+	"Timeout": "1200",
+	"Count": "1"
+      }
+    },
+    "control": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": { "Ref": "ImageId" },
+        "InstanceType": { "Ref": "ControlInstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "SecurityGroupIds": [ { "Ref": "secgroup" } ],
+        "IamInstanceProfile": { "Ref": "IamProfile" },
+        "SubnetId": { "Ref": "subnet" },
+        "PrivateIpAddress": { "Fn::Join": [ "", [ "192.168.", { "Ref": "SubnetNumber" }, ".100" ] ] },
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": { "VolumeSize": { "Ref": "ControlDiskSize" } }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+		"yum -y update\n",
+		"yum -y install shellinabox\n",
+		"openssl rand 1000 | strings | grep -io [[:alnum:]] | head -n 16 | tr -d '\n' > /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
+		"usermod -p $(openssl passwd -1 `cat /root/passwd.", { "Ref": "SubnetNumber" }, "`) ec2-user\n",
+		"echo >> /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
+                "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
+		"cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  }
+}

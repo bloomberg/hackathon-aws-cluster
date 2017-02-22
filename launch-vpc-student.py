@@ -5,12 +5,10 @@ import sys
 import boto3
 import concurrent.futures
 
-region = 'eu-west-1'
-studentNodeImageId = 'ami-88aef7fb'
-controlNodeInstanceType = 'm3.xlarge'
-controlNodeDiskSize = '16'
-workerNodeInstanceType = 'm3.large'
-workerNodeDiskSize = '16'
+region = 'us-east-1'
+studentNodeImageId = 'ami-7cb9896b'
+controlNodeInstanceType = 'c4.4xlarge'
+controlNodeDiskSize = '32'
 
 argc = len(sys.argv) - 1
 if argc == 1:
@@ -36,8 +34,6 @@ def launch_student(studentNumber):
                              { "ParameterKey": "IamProfile", "ParameterValue": iamProfile },
                              { "ParameterKey": "ControlInstanceType", "ParameterValue": controlNodeInstanceType },
                              { "ParameterKey": "ControlDiskSize", "ParameterValue": controlNodeDiskSize },
-                             { "ParameterKey": "WorkerInstanceType", "ParameterValue": workerNodeInstanceType },
-                             { "ParameterKey": "WorkerDiskSize", "ParameterValue": workerNodeDiskSize },
                              { "ParameterKey": "ImageId", "ParameterValue": studentNodeImageId },
                              { "ParameterKey": "SubnetNumber", "ParameterValue": studentNumber },
                              { "ParameterKey": "VpcId", "ParameterValue": vpcId },
@@ -56,7 +52,7 @@ def wait_on_stack(t):
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
-st = cf.describe_stacks(StackName = 'jepsen')
+st = cf.describe_stacks(StackName = 'coa')
 
 outputs = st['Stacks'][0]['Outputs']
 
@@ -74,7 +70,7 @@ for out in outputs:
     elif out['Description'] == 'IamProfile':
         iamProfile = out['OutputValue']
 
-with open('jepsen-vpc-student.json', 'r') as template_file:
+with open('coa-vpc-student.json', 'r') as template_file:
     studentTemplate = template_file.read()
 
 with concurrent.futures.ThreadPoolExecutor(max_workers = (end - start) + 1) as executor:

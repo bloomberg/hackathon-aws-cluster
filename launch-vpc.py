@@ -3,11 +3,11 @@
 from __future__ import print_function
 import boto3
 
-region = 'eu-west-1'
-keyName = 'jtest1'
-elasticIP = '52.213.115.56'
+region = 'us-east-1'
+keyName = 'coa1'
+elasticIP = '34.200.191.76'
 accessNodeInstanceType = 't2.xlarge'
-accessNodeImageId = 'ami-7d45150e'
+accessNodeImageId = 'ami-b14ba7a7'
 accessNodeAllowedIPs = '0.0.0.0/0'
 
 ec2 = boto3.client(region_name = region, service_name = 'ec2')
@@ -16,12 +16,12 @@ allocationID = ec2.describe_addresses(Filters = [{'Name': 'public-ip', 'Values':
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
-with open('jepsen-vpc.json', 'r') as template_file:
+with open('coa-vpc.json', 'r') as template_file:
     vpcTemplate = template_file.read()
 
 print('Creating VPC stack')
 
-st = cf.create_stack(StackName = 'jepsen',
+st = cf.create_stack(StackName = 'coa',
                      TemplateBody = vpcTemplate,
                      Capabilities = [ 'CAPABILITY_IAM' ],
                      Parameters = [
@@ -37,6 +37,6 @@ stwaiter = cf.get_waiter('stack_create_complete')
 
 print('Waiting for stack creation to be complete...')
 
-stwaiter.wait(StackName = 'jepsen')
+stwaiter.wait(StackName = 'coa')
 
 print('Stack creation complete')
