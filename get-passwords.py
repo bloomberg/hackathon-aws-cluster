@@ -5,7 +5,7 @@ import sys
 import os
 import boto3
 
-region = 'eu-west-1'
+region = 'us-east-1'
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
