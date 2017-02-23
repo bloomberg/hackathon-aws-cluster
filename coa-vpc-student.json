@@ -136,7 +136,13 @@
 		"usermod -p $(openssl passwd -1 `cat /root/passwd.", { "Ref": "SubnetNumber" }, "`) ec2-user\n",
 		"echo >> /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
                 "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
-		"/opt/aws/bin/cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
+		"mkdir /home/ec2-user/.jupyter\n",
+                "echo 'c.NotebookApp.allow_origin = \"*\"' >> /home/ec2-user/.jupyter/jupyter_notebook_config.py\n",
+                "echo 'c.NotebookApp.base_url = \"/student", { "Ref": "SubnetNumber" }, "/jupyter\"' >> /home/ec2-user/.jupyter/jupyter_notebook_config.py\n",
+                "echo 'c.NotebookApp.ip = \"0.0.0.0\"' >> /home/ec2-user/.jupyter/jupyter_notebook_config.py\n",
+                "echo 'c.NotebookApp.open_browser = False' >> /home/ec2-user/.jupyter/jupyter_notebook_config.py\n",
+                "echo 'c.NotebookApp.port = 8080' >> /home/ec2-user/.jupyter/jupyter_notebook_config.py\n",
+                "/opt/aws/bin/cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
               ]
             ]
           }

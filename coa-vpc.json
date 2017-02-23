@@ -250,6 +250,7 @@
                 "a2enmod proxy\n",
                 "a2enmod proxy_html\n",
                 "a2enmod proxy_http\n",
+                "a2enmod proxy_wstunnel\n",
                 "a2enmod xml2enc\n",
 		"wget -O /var/www/html/index.html https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/coa-hackathon/index.html\n",
 		"wget -O /etc/apache2/sites-available/proxies.conf https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/coa-hackathon/proxies.conf\n",
