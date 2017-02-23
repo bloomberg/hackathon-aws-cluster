@@ -215,6 +215,18 @@
         ]
       }
     },
+    "accessWaitHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle",
+      "Properties": { }
+    },
+    "accessWaitCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "Properties": {
+        "Handle": { "Ref": "accessWaitHandle" },
+	"Timeout": "1200",
+	"Count": "1"
+      }
+    },
     "access": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
@@ -233,6 +245,8 @@
 		"apt-get -y update\n",
 		"apt-get -y upgrade\n",
                 "apt-get -y install apache2 libapache2-mod-proxy-html libxml2-dev\n",
+		"apt-get -y install python-setuptools\n",
+		"easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
                 "a2enmod proxy\n",
                 "a2enmod proxy_html\n",
                 "a2enmod proxy_http\n",
@@ -240,7 +254,8 @@
 		"wget -O /var/www/html/index.html https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/coa-hackathon/index.html\n",
 		"wget -O /etc/apache2/sites-available/proxies.conf https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/coa-hackathon/proxies.conf\n",
 		"a2ensite proxies\n",
-		"service apache2 restart\n"
+		"service apache2 restart\n",
+		"cfn-signal '", { "Ref": "accessWaitHandle" }, "' \n"
               ]
             ]
           }
