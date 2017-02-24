@@ -6,7 +6,7 @@ import boto3
 import concurrent.futures
 
 region = 'us-east-1'
-studentNodeImageId = 'ami-7cb9896b'
+studentNodeImageId = 'ami-a28a58b4'
 controlNodeInstanceType = 'c4.4xlarge'
 controlNodeDiskSize = '32'
 
