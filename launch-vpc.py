@@ -7,7 +7,7 @@ region = 'us-east-1'
 keyName = 'coa1'
 elasticIP = '34.200.191.76'
 accessNodeInstanceType = 't2.xlarge'
-accessNodeImageId = 'ami-b14ba7a7'
+accessNodeImageId = 'ami-226dbe34'
 accessNodeAllowedIPs = '0.0.0.0/0'
 
 ec2 = boto3.client(region_name = region, service_name = 'ec2')

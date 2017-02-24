@@ -16,8 +16,8 @@ do
   cat <<EOF
 <tr>
 <th>Student $n</th>
-<td><a href="/student$n/shell">Shell</a></td>
-<td><a href="/student$n/jupyter">Jupyter</a></td>
+<td><a target="_blank" href="/student$n/shell">Shell</a></td>
+<td><a target="_blank" href="/student$n/jupyter">Jupyter</a></td>
 </tr>
 EOF
 done
