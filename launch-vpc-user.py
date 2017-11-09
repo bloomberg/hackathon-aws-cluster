@@ -6,7 +6,7 @@ import boto3
 import concurrent.futures
 
 region = 'eu-west-1'
-userNodeImageId = 'ami-052d817c'
+userNodeImageId = 'ami-ff2c8086'
 userNodeInstanceType = 'c5.xlarge'
 userNodeDiskSize = '32'
 
