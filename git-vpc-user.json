@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "COA Hackathon VPC Student",
+  "Description": "Git Hackathon VPC Student",
   "Parameters": {
     "ImageId": {
       "Type": "String"
@@ -14,10 +14,10 @@
     "IamProfile": {
       "Type": "String"
     },
-    "ControlInstanceType": {
+    "InstanceType": {
       "Type": "String"
     },
-    "ControlDiskSize": {
+    "DiskSize": {
       "Type": "Number"
     },
     "VpcId": {
@@ -105,7 +105,7 @@
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "ImageId": { "Ref": "ImageId" },
-        "InstanceType": { "Ref": "ControlInstanceType" },
+        "InstanceType": { "Ref": "InstanceType" },
         "KeyName": { "Ref": "KeyName" },
         "SecurityGroupIds": [ { "Ref": "secgroup" } ],
         "IamInstanceProfile": { "Ref": "IamProfile" },
@@ -114,7 +114,7 @@
         "BlockDeviceMappings": [
           {
             "DeviceName": "/dev/xvda",
-            "Ebs": { "VolumeSize": { "Ref": "ControlDiskSize" } }
+            "Ebs": { "VolumeSize": { "Ref": "DiskSize" } }
           }
         ],
         "UserData": {
@@ -127,11 +127,10 @@
                 "sed -i -e /PasswordAuth/d /etc/ssh/sshd_config\n",
                 "service sshd restart\n",
 		"openssl rand 1000 | strings | grep -io [[:alnum:]] | head -n 16 | tr -d '\n' > /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
-		"usermod -p $(openssl passwd -1 `cat /root/passwd.", { "Ref": "SubnetNumber" }, "`) ec2-user\n",
+		"usermod -p $(openssl passwd -1 `cat /root/passwd.", { "Ref": "SubnetNumber" }, "`) ubuntu\n",
 		"echo >> /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
                 "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
-                "echo 'c.NotebookApp.base_url = \"/student", { "Ref": "SubnetNumber" }, "/jupyter\"' >> /home/ec2-user/.jupyter/jupyter_notebook_config.py\n",
-                "/opt/aws/bin/cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
+                "/usr/local/bin/cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
               ]
             ]
           }

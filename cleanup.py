@@ -5,11 +5,11 @@ import sys
 import boto3
 import concurrent.futures
 
-region = 'us-east-1'
+region = 'eu-west-1'
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
-st = cf.describe_stacks(StackName = 'coa')
+st = cf.describe_stacks(StackName = 'git')
 
 outputs = st['Stacks'][0]['Outputs']
 
@@ -39,7 +39,7 @@ stacks = cf.list_stacks(StackStatusFilter = [ 'CREATE_IN_PROGRESS',
                                             ])
 
 
-def delete_student(stackName):
+def delete_user(stackName):
     print("Deleting", stackName)
     cf.delete_stack(StackName = stackName)
     waiter = cf.get_waiter('stack_delete_complete')
@@ -49,13 +49,13 @@ def wait_on_stack(t):
     t[1].wait(StackName = t[0])
     print("Stack", t[0], "deleted")
 
-print("Deleting student stacks")
+print("Deleting user stacks")
 with concurrent.futures.ThreadPoolExecutor(max_workers = len(stacks['StackSummaries'])) as executor:
-    fs = { executor.submit(wait_on_stack, delete_student(x['StackName'])) for x in stacks['StackSummaries'] if x['StackName'].startswith('student-') }
+    fs = { executor.submit(wait_on_stack, delete_user(x['StackName'])) for x in stacks['StackSummaries'] if x['StackName'].startswith('user-') }
     print('Waiting for stack deletion to be complete...')
     concurrent.futures.wait(fs)
 
 print("Deleting top-level stack")
-cf.delete_stack(StackName = 'coa')
+cf.delete_stack(StackName = 'git')
 waiter = cf.get_waiter('stack_delete_complete')
-waiter.wait(StackName = 'coa')
+waiter.wait(StackName = 'git')

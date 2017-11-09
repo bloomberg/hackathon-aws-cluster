@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "COA Hackathon VPC",
+  "Description": "Git Hackathon VPC",
   "Parameters": {
     "KeyName": {
       "Description": "EC2 KeyPair for admin access to the access node.",
@@ -96,7 +96,7 @@
             {
               "Effect": "Allow",
               "Action": [ "s3:GetObject", "s3:PutObject", "s3:DeleteObject" ],
-              "Resource": "arn:aws:s3:::coa-hackathon/*"
+              "Resource": "arn:aws:s3:::git-hackathon/*"
             }
           ]
         },
@@ -247,8 +247,8 @@
               "",
               [
                 "#!/bin/bash -xe\n",
-		"wget -O /var/www/html/index.html https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/coa-hackathon/index.html\n",
-		"wget -O /etc/apache2/sites-available/proxies.conf https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/coa-hackathon/proxies.conf\n",
+		"wget -O /var/www/html/index.html https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/git-hackathon/index.html\n",
+		"wget -O /etc/apache2/sites-available/proxies.conf https://raw.githubusercontent.com/bloomberg/jepsen-training-vpc/git-hackathon/proxies.conf\n",
 		"a2ensite proxies\n",
 		"service apache2 restart\n",
 		"cfn-signal '", { "Ref": "accessWaitHandle" }, "' \n"

@@ -5,10 +5,10 @@ import sys
 import boto3
 import concurrent.futures
 
-region = 'us-east-1'
-studentNodeImageId = 'ami-a28a58b4'
-controlNodeInstanceType = 'c4.4xlarge'
-controlNodeDiskSize = '32'
+region = 'eu-west-1'
+userNodeImageId = 'ami-c64ae6bf'
+userNodeInstanceType = 'c4.4xlarge'
+userNodeDiskSize = '32'
 
 argc = len(sys.argv) - 1
 if argc == 1:
@@ -21,21 +21,21 @@ else:
     print("One or two arguments must be supplied.")
     sys.exit()
 
-def launch_student(studentNumber):
-    print('Creating VPC stack for student', studentNumber)
+def launch_user(userNumber):
+    print('Creating VPC stack for user', userNumber)
 
-    stackName = 'student-' + studentNumber
+    stackName = 'user-' + userNumber
 
     st = cf.create_stack(StackName = stackName,
-                         TemplateBody = studentTemplate,
+                         TemplateBody = userTemplate,
                          Parameters = [
                              { "ParameterKey": "KeyName", "ParameterValue": keyName },
                              { "ParameterKey": "Bucket", "ParameterValue": bucket },
                              { "ParameterKey": "IamProfile", "ParameterValue": iamProfile },
-                             { "ParameterKey": "ControlInstanceType", "ParameterValue": controlNodeInstanceType },
-                             { "ParameterKey": "ControlDiskSize", "ParameterValue": controlNodeDiskSize },
-                             { "ParameterKey": "ImageId", "ParameterValue": studentNodeImageId },
-                             { "ParameterKey": "SubnetNumber", "ParameterValue": studentNumber },
+                             { "ParameterKey": "InstanceType", "ParameterValue": userNodeInstanceType },
+                             { "ParameterKey": "DiskSize", "ParameterValue": userNodeDiskSize },
+                             { "ParameterKey": "ImageId", "ParameterValue": userNodeImageId },
+                             { "ParameterKey": "SubnetNumber", "ParameterValue": userNumber },
                              { "ParameterKey": "VpcId", "ParameterValue": vpcId },
                              { "ParameterKey": "SecGroupAccess", "ParameterValue": secGroupAccess },
                              { "ParameterKey": "RouteTable", "ParameterValue": privateRouteTable }
@@ -52,7 +52,7 @@ def wait_on_stack(t):
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
-st = cf.describe_stacks(StackName = 'coa')
+st = cf.describe_stacks(StackName = 'git')
 
 outputs = st['Stacks'][0]['Outputs']
 
@@ -70,11 +70,11 @@ for out in outputs:
     elif out['Description'] == 'IamProfile':
         iamProfile = out['OutputValue']
 
-with open('coa-vpc-student.json', 'r') as template_file:
-    studentTemplate = template_file.read()
+with open('git-vpc-user.json', 'r') as template_file:
+    userTemplate = template_file.read()
 
 with concurrent.futures.ThreadPoolExecutor(max_workers = (end - start) + 1) as executor:
-    fs = { executor.submit(wait_on_stack, launch_student(str(x))) for x in range(start, end + 1) }
+    fs = { executor.submit(wait_on_stack, launch_user(str(x))) for x in range(start, end + 1) }
     print('Waiting for stack creation to be complete...')
     concurrent.futures.wait(fs)
 

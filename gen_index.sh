@@ -5,7 +5,7 @@ cat <<EOF
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>COA Hackathon Cluster</title>
+    <title>Git Hackathon Cluster</title>
   </head>
   <body>
     <table>
@@ -15,9 +15,8 @@ for n in `seq $1 $2`
 do
   cat <<EOF
 <tr>
-<th>Student $n</th>
-<td><a target="_blank" href="/student$n/shell">Shell</a></td>
-<td><a target="_blank" href="/student$n/jupyter">Jupyter</a></td>
+<th>User $n</th>
+<td><a target="_blank" href="/user$n/shell">Shell</a></td>
 </tr>
 EOF
 done
