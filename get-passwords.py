@@ -4,6 +4,8 @@ from __future__ import print_function
 import sys
 import os
 import boto3
+import StringIO
+import csv
 
 region = 'eu-west-1'
 
@@ -24,7 +26,18 @@ list = s3.list_objects_v2(Bucket = bucket, Prefix = 'passwd.')
 if not os.path.exists('passwords'):
     os.makedirs('passwords')
 
+passwords = []
+
 for obj in list['Contents']:
     print("Getting", obj['Key'])
+    passwd = StringIO.StringIO()
+    s3.download_fileobj(bucket, obj['Key'], passwd)
+
     with open('passwords/' + obj['Key'] + '.txt', 'w') as pwfile:
-        s3.download_fileobj(bucket, obj['Key'], pwfile)
+        pwfile.write(passwd.getvalue())
+
+    passwords.append([obj['Key'][7:], passwd.getvalue().strip()])
+
+passwords.sort(key = lambda x: int(x[0]))
+with open('passwords/passwords.csv', 'w') as pwfile:
+    csv.writer(pwfile).writerows(passwords)
