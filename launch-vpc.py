@@ -7,7 +7,7 @@ region = 'eu-west-1'
 keyName = 'git1'
 elasticIP = '34.252.213.213'
 accessNodeInstanceType = 't2.xlarge'
-accessNodeImageId = 'ami-760aaa0f'
+accessNodeImageId = 'ami-de57fba7'
 accessNodeAllowedIPs = '0.0.0.0/0'
 
 ec2 = boto3.client(region_name = region, service_name = 'ec2')
