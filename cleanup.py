@@ -4,6 +4,7 @@ from __future__ import print_function
 import sys
 import boto3
 import concurrent.futures
+import shutil
 
 region = 'eu-west-1'
 
@@ -59,3 +60,5 @@ print("Deleting top-level stack")
 cf.delete_stack(StackName = 'git')
 waiter = cf.get_waiter('stack_delete_complete')
 waiter.wait(StackName = 'git')
+
+shutil.rmtree('passwords')
