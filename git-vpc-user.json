@@ -89,19 +89,19 @@
         "SourceSecurityGroupId": { "Ref": "secgroup" }
       }
     },
-    "controlWaitHandle": {
+    "userWaitHandle": {
       "Type": "AWS::CloudFormation::WaitConditionHandle",
       "Properties": { }
     },
-    "controlWaitCondition": {
+    "userWaitCondition": {
       "Type": "AWS::CloudFormation::WaitCondition",
       "Properties": {
-        "Handle": { "Ref": "controlWaitHandle" },
+        "Handle": { "Ref": "userWaitHandle" },
 	"Timeout": "1200",
 	"Count": "1"
       }
     },
-    "control": {
+    "user": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "ImageId": { "Ref": "ImageId" },
@@ -130,7 +130,7 @@
 		"usermod -p $(openssl passwd -1 `cat /root/passwd.", { "Ref": "SubnetNumber" }, "`) ubuntu\n",
 		"echo >> /root/passwd.", { "Ref": "SubnetNumber" }, "\n",
                 "aws s3 cp /root/passwd.", { "Ref": "SubnetNumber" }, " s3://", { "Ref": "Bucket" }, "\n",
-                "/usr/local/bin/cfn-signal '", { "Ref": "controlWaitHandle" }, "' \n"
+                "/usr/local/bin/cfn-signal '", { "Ref": "userWaitHandle" }, "' \n"
               ]
             ]
           }
