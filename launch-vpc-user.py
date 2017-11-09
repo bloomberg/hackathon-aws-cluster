@@ -7,7 +7,7 @@ import concurrent.futures
 
 region = 'eu-west-1'
 userNodeImageId = 'ami-c64ae6bf'
-userNodeInstanceType = 'c4.4xlarge'
+userNodeInstanceType = 'c5.xlarge'
 userNodeDiskSize = '32'
 
 argc = len(sys.argv) - 1
