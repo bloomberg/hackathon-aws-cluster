@@ -62,7 +62,8 @@ Wait for it finish.
 6. Run ```cleanup.py``` to destroy everything when the event is complete.
 
 If any user instance needs to be destroyed and recreated, you will need to log in to the AWS console, navigate to the CloudFormation service, and then delete that user's stack before
-attempting to recreate it.
+attempting to recreate it. You will need to be sure to select the proper AWS region (using the drop-down selector in the top-right corner) in the console in order to
+see the resources created by CloudFormation.
 
 ## Configuration
 
