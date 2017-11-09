@@ -6,6 +6,7 @@ import boto3
 import concurrent.futures
 
 region = 'eu-west-1'
+project = 'gitsprint'
 userNodeImageId = 'ami-ff2c8086'
 userNodeInstanceType = 'c5.xlarge'
 userNodeDiskSize = '32'
@@ -29,6 +30,7 @@ def launch_user(userNumber):
     st = cf.create_stack(StackName = stackName,
                          TemplateBody = userTemplate,
                          Parameters = [
+                             { "ParameterKey": "Project", "ParameterValue": project },
                              { "ParameterKey": "KeyName", "ParameterValue": keyName },
                              { "ParameterKey": "Bucket", "ParameterValue": bucket },
                              { "ParameterKey": "IamProfile", "ParameterValue": iamProfile },

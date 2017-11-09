@@ -4,6 +4,7 @@ from __future__ import print_function
 import boto3
 
 region = 'eu-west-1'
+project = 'gitsprint'
 keyName = 'git1'
 elasticIP = '34.252.213.213'
 accessNodeInstanceType = 't2.xlarge'
@@ -25,6 +26,7 @@ st = cf.create_stack(StackName = 'git',
                      TemplateBody = vpcTemplate,
                      Capabilities = [ 'CAPABILITY_IAM' ],
                      Parameters = [
+                       { "ParameterKey": "Project", "ParameterValue": project },
                        { "ParameterKey": "KeyName", "ParameterValue": keyName },
                        { "ParameterKey": "ElasticIp", "ParameterValue": allocationID },
                        { "ParameterKey": "AccessInboundCidrIp", "ParameterValue": accessNodeAllowedIPs },

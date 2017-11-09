@@ -31,6 +31,10 @@
     },
     "SubnetNumber": {
       "Type": "String"
+    },
+    "Project": {
+      "Description": "Project Identifier",
+      "Type": "String"
     }
   },
   "Resources": {
@@ -117,6 +121,7 @@
             "Ebs": { "VolumeSize": { "Ref": "DiskSize" } }
           }
         ],
+        "Tags": [ { "Key": "Project", "Value": { "Ref": "Project" } } ],
         "UserData": {
           "Fn::Base64": {
             "Fn::Join": [
