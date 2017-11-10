@@ -7,9 +7,9 @@ import concurrent.futures
 
 region = 'eu-west-1'
 project = 'gitsprint'
-userNodeImageId = 'ami-ff2c8086'
+userNodeImageId = 'ami-0a8a2573'
 userNodeInstanceType = 'c5.xlarge'
-userNodeDiskSize = '32'
+userNodeDiskSize = '16'
 
 argc = len(sys.argv) - 1
 if argc == 1:
