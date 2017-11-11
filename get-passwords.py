@@ -1,10 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from __future__ import print_function
 import sys
 import os
 import boto3
-import StringIO
+import io
 import csv
 
 region = 'eu-west-1'
@@ -30,10 +29,10 @@ passwords = []
 
 for obj in list['Contents']:
     print("Getting", obj['Key'])
-    passwd = StringIO.StringIO()
+    passwd = io.BytesIO()
     s3.download_fileobj(bucket, obj['Key'], passwd)
 
-    with open('passwords/' + obj['Key'] + '.txt', 'w') as pwfile:
+    with open('passwords/' + obj['Key'] + '.txt', 'wb') as pwfile:
         pwfile.write(passwd.getvalue())
 
     passwords.append([obj['Key'][7:], passwd.getvalue().strip()])

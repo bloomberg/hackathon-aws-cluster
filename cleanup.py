@@ -1,6 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from __future__ import print_function
 import sys
 import boto3
 import concurrent.futures
@@ -48,13 +47,16 @@ def delete_user(stackName):
 
 def wait_on_stack(t):
     t[1].wait(StackName = t[0])
+    return t[0]
     print("Stack", t[0], "deleted")
 
 print("Deleting user stacks")
-with concurrent.futures.ThreadPoolExecutor(max_workers = len(stacks['StackSummaries'])) as executor:
+with concurrent.futures.ThreadPoolExecutor(4) as executor:
     fs = { executor.submit(wait_on_stack, delete_user(x['StackName'])) for x in stacks['StackSummaries'] if x['StackName'].startswith('user-') }
     print('Waiting for stack deletion to be complete...')
-    concurrent.futures.wait(fs)
+    for f in concurrent.futures.as_completed(fs):
+        r = f.result()
+        print('Stack', r[0], 'deleted')
 
 print("Deleting top-level stack")
 cf.delete_stack(StackName = 'git')

@@ -1,6 +1,7 @@
 # git-hackathon-vpc
 
-This repository contains Python scripts and CloudFormation templates used to launch a cluster of user instances for a Git hackathon.
+This repository contains Python scripts and CloudFormation templates used to launch a cluster of user instances for a Git hackathon. The Python scripts
+require Python 3 and the 'boto3' module (install with 'pip' or any other mechanism you like).
 
 ## Setup
 

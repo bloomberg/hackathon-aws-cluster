@@ -1,6 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from __future__ import print_function
 import sys
 import boto3
 import concurrent.futures
@@ -50,7 +49,8 @@ def launch_user(userNumber):
 
 def wait_on_stack(t):
     t[1].wait(StackName = t[0])
-    print("Stack", t[0], "complete")
+    st = cf.describe_stacks(StackName = t[0])
+    return (t[0], st['Stacks'][0]['StackStatus'])
 
 cf = boto3.client(region_name = region, service_name = 'cloudformation')
 
@@ -75,9 +75,11 @@ for out in outputs:
 with open('git-vpc-user.json', 'r') as template_file:
     userTemplate = template_file.read()
 
-with concurrent.futures.ThreadPoolExecutor(max_workers = (end - start) + 1) as executor:
+with concurrent.futures.ThreadPoolExecutor(4) as executor:
     fs = { executor.submit(wait_on_stack, launch_user(str(x))) for x in range(start, end + 1) }
     print('Waiting for stack creation to be complete...')
-    concurrent.futures.wait(fs)
+    for f in concurrent.futures.as_completed(fs):
+        r = f.result()
+        print('Stack', r[0], ':', r[1])
 
 print('Stack creation complete')
