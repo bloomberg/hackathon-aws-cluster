@@ -32,10 +32,10 @@ for obj in list['Contents']:
     passwd = io.BytesIO()
     s3.download_fileobj(bucket, obj['Key'], passwd)
 
-    with open('passwords/' + obj['Key'] + '.txt', 'wb') as pwfile:
-        pwfile.write(passwd.getvalue())
+    with open('passwords/' + obj['Key'] + '.txt', 'w') as pwfile:
+        pwfile.write(passwd.getvalue().decode('utf-8'))
 
-    passwords.append([obj['Key'][7:], passwd.getvalue().strip()])
+    passwords.append([obj['Key'][7:], passwd.getvalue().decode('utf-8').strip()])
 
 passwords.sort(key = lambda x: int(x[0]))
 with open('passwords/passwords.csv', 'w') as pwfile:
