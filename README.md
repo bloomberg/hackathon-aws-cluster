@@ -75,4 +75,4 @@ The user instances are quad-core VMs with 8GB of RAM, so parallel builds should 
 The image for the access node needs the CloudFormation tools and Apache HTTPD with mod_proxy and mod_proxy_http enabled. The cloud-init script in the CloudFormation template
 expects the Debian/Ubuntu layout of configuration files for the web server.
 
-The image for the user nodes needs the CloudFormation tools, the AWS CLI tool, and ShellInABox. SIAB must be configured to listen on port 80 with SSL disabled (and the SSL menu item dissabled).
+The image for the user nodes needs the CloudFormation tools, the AWS CLI tool, and ShellInABox. SIAB must be configured to listen on port 80 with SSL disabled (and the SSL menu item disabled).
